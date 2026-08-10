@@ -1,0 +1,48 @@
+# --- Python / Backend ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+venv/
+env/
+.venv/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# --- Node / Frontend (Next.js/React) ---
+node_modules/
+.next/
+out/
+build/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+
+# --- Project Specific Data & Outputs ---
+# Audio chunks and processing temps
+backend/temp_chunks/
+backend/audio_chunks/
+backend/outputs/
+backend/uploads
+# Datasets and generated evaluation files
+es2002/
+final_minutes.txt
+tests/final_minutes.txt
+*.pdf
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# --- IDEs and Editors ---
+.vscode/
+.idea/
+*.swp
+*.swo

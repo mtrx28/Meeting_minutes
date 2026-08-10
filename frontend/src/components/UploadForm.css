@@ -1,0 +1,304 @@
+/* ============================================
+   UPLOAD FORM STYLES
+   ============================================ */
+
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  width: 100%;
+  max-width: 680px;
+  padding-top: var(--space-8);
+}
+
+/* --- Hero text --- */
+.upload-hero {
+  text-align: center;
+}
+
+.upload-title {
+  font-size: var(--text-4xl);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.upload-subtitle {
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* --- Error --- */
+.upload-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4) var(--space-5);
+  background: var(--error-bg);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: var(--radius-lg);
+  color: var(--error);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+/* --- Drop zone --- */
+.drop-zone {
+  position: relative;
+  width: 100%;
+  padding: var(--space-12) var(--space-8);
+  border: 1px dashed var(--border-accent);
+  border-radius: var(--radius-xl);
+  background: transparent;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  text-align: center;
+}
+
+.drop-zone:hover {
+  border-color: var(--accent-primary);
+  background: var(--bg-glass);
+}
+
+.drop-zone--active {
+  border-color: var(--accent-primary);
+  background: rgba(59, 130, 246, 0.05);
+  transform: scale(1.01);
+}
+
+.drop-zone--has-file {
+  padding: var(--space-6) var(--space-8);
+  border-style: solid;
+  border-color: var(--border-medium);
+  cursor: default;
+}
+
+.drop-zone__input {
+  display: none;
+}
+
+/* --- Drop zone prompt --- */
+.drop-zone__prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.drop-zone__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-glass-strong);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.drop-zone__title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.drop-zone__hint {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.drop-zone__browse {
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color var(--transition-fast);
+}
+.drop-zone__browse:hover {
+  color: var(--accent-primary);
+}
+
+.drop-zone__formats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.format-tag {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-glass-strong);
+  border: 1px solid var(--border-subtle);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+/* --- File info inside drop zone --- */
+.drop-zone__file-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.file-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--bg-glass-strong);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.file-details {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.file-meta-sep {
+  color: var(--text-tertiary);
+}
+
+.file-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.file-remove:hover {
+  background: var(--error-bg);
+  color: var(--error);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* --- Process button --- */
+.btn-process {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 360px;
+  padding: 0.8rem 1.5rem;
+  background: var(--accent-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: white;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+  white-space: nowrap;
+}
+
+.btn-process:hover {
+  background: var(--accent-primary-hover);
+}
+
+.btn-process:active {
+  transform: translateY(1px);
+}
+
+/* --- Feature pills --- */
+.features-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.feature-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: all var(--transition-base);
+}
+
+.feature-pill:hover {
+  border-color: var(--border-accent);
+  color: var(--text-accent);
+  background: var(--accent-gradient-subtle);
+}
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
+  .upload-section {
+    padding-top: var(--space-4);
+  }
+
+  .upload-title {
+    font-size: var(--text-2xl);
+  }
+
+  .upload-subtitle {
+    font-size: var(--text-base);
+  }
+
+  .drop-zone {
+    padding: var(--space-8) var(--space-4);
+  }
+
+  .drop-zone__icon {
+    width: 56px;
+    height: 56px;
+  }
+
+  .drop-zone__icon svg {
+    width: 28px;
+    height: 28px;
+  }
+}
