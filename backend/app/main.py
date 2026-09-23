@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 
 from typing import Dict, Optional
 
-from .models import UploadResponse, MeetingMinutesResult, AskRequest, AskResponse
+from .models import UploadResponse, MeetingMinutesResult, AskRequest, AskResponse, GraphClaim, GraphStats
 from .pipeline import MeetingPipeline
 from .minutes_generator import MeetingMinutesGenerator
 
@@ -290,6 +290,30 @@ async def ask_question(request: AskRequest):
         meeting_id=request.meeting_id,
     )
     return AskResponse(**result)
+
+
+@app.get("/api/graph/owner/{owner}", response_model=list[GraphClaim])
+async def graph_claims_by_owner(owner: str):
+    """Every verified action item/decision owned by `owner`, across every
+    meeting processed with use_multi_agent=true so far."""
+    pipeline = get_pipeline()
+    return pipeline.knowledge_graph.claims_by_owner(owner)
+
+
+@app.get("/api/graph/topic/{topic}", response_model=list[GraphClaim])
+async def graph_claims_by_topic(topic: str):
+    """Every verified claim tagged with `topic` (a single lowercase keyword),
+    in the order their meetings were processed -- a coarse timeline of how
+    that topic has come up across meetings."""
+    pipeline = get_pipeline()
+    return pipeline.knowledge_graph.topic_timeline(topic)
+
+
+@app.get("/api/graph/stats", response_model=GraphStats)
+async def graph_stats():
+    """Node/edge counts for the cross-meeting knowledge graph."""
+    pipeline = get_pipeline()
+    return pipeline.knowledge_graph.stats()
 
 
 @app.delete("/api/jobs/{job_id}")

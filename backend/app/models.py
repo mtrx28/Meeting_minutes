@@ -72,6 +72,22 @@ class AskResponse(BaseModel):
     sources: List[Source]
 
 
+class GraphClaim(BaseModel):
+    """A verified claim node from the knowledge graph."""
+    claim_node: str
+    meeting_id: str
+    claim_type: str
+    text: str
+    owner: Optional[str] = None
+    due_date: Optional[str] = None
+
+
+class GraphStats(BaseModel):
+    total_nodes: int
+    total_edges: int
+    nodes_by_type: Dict[str, int]
+
+
 class MeetingMinutesResult(BaseModel):
     """Complete meeting minutes result."""
     job_id: str

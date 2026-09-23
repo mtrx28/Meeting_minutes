@@ -47,6 +47,24 @@ curl -X POST http://localhost:8000/api/ask \
 
 Retrieval is TF-IDF + cosine similarity over transcript chunks (a classic sparse retriever, not an embedding model) — deliberate, so the RAG layer adds zero model-download/network dependency and zero GPU requirement on top of a pipeline that already runs Whisper + pyannote locally. The answer is generated **only** from the retrieved excerpts, each cited as `{meeting_id} [mm:ss] {speaker}`; if nothing relevant is indexed for the question, the endpoint returns `"grounded": false` and a fixed refusal message instead of letting the LLM guess. Pass `meeting_id` in the request to scope retrieval to a single meeting.
 
+### Cross-meeting knowledge graph
+
+When a meeting is processed with `use_multi_agent=true`, its **verified** claims (`backend/app/agents.py` output — unverified claims are never let in) are ingested into a persisted graph (`backend/app/knowledge_graph.py`, `networkx`, stored at `backend/outputs/knowledge_graph.json`):
+
+```
+meeting:<id> --CONTAINS--> claim:<id>
+person:<name> --OWNS-----> claim:<id>     (when the claim has an owner)
+claim:<id>    --TAGGED----> topic:<keyword>
+```
+
+```bash
+GET /api/graph/owner/Bob        # everything Bob owns, across every meeting
+GET /api/graph/topic/pricing    # every verified claim tagged "pricing", in meeting order
+GET /api/graph/stats            # node/edge counts by type
+```
+
+Same reasoning as the retrieval layer's TF-IDF-over-embeddings choice: an embedded graph library instead of a graph database server, appropriate for a single-service pipeline at this scale, with the storage layer swappable behind the same `KnowledgeGraph` interface if it ever needs to be a real graph DB.
+
 ## 🛠 Tech Stack
 
 - **Frontend**: Next.js, React, Tailwind CSS (Server-Sent Events for real-time progress streaming)

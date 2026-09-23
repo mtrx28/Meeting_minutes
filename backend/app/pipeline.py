@@ -16,6 +16,7 @@ from .diarization import process_audio_pipeline
 from .minutes_generator import MeetingMinutesGenerator
 from .agents import MultiAgentMinutesPipeline
 from .knowledge_base import MeetingKnowledgeBase
+from .knowledge_graph import KnowledgeGraph
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class MeetingPipeline:
         self._diarization_pipeline = None
         self._minutes_generator = None
         self.knowledge_base = MeetingKnowledgeBase()
+        self.knowledge_graph = KnowledgeGraph()
 
     def _load_models(self, progress_callback: Optional[Callable] = None):
         """Load ML models if not already loaded."""
@@ -140,6 +142,17 @@ class MeetingPipeline:
             self.knowledge_base.index_meeting(resolved_meeting_id, transcribed_segments)
         except Exception as e:
             logger.warning(f"Knowledge base indexing failed (non-fatal): {e}")
+
+        # Step 5: Ingest verified claims into the cross-meeting knowledge graph.
+        # Only multi-agent runs produce claims with a verification status; a
+        # single-shot run has nothing here to add, by design (see
+        # knowledge_graph.py's module docstring for why unverified claims are
+        # never let into the graph).
+        if use_multi_agent and result.get('claims'):
+            try:
+                self.knowledge_graph.add_verified_claims(resolved_meeting_id, result['claims'])
+            except Exception as e:
+                logger.warning(f"Knowledge graph ingestion failed (non-fatal): {e}")
 
         # Add metadata
         end_time = datetime.now()
