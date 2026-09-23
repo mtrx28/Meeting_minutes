@@ -25,6 +25,16 @@ The pipeline uses a two-stage approach. Rather than processing monolithic audio,
 4. **Binary Search Alignment**: Programmatically maps Whisper's word-level timestamps to Pyannote's speaker segments.
 5. **Generative Extraction (`Mistral AI`)**: The LLM synthesizes the unified transcript into a structured Markdown document (Agenda, Decisions, Action Items).
 
+### Multi-agent generation (opt-in)
+
+By default step 5 is a single LLM call. Passing `use_multi_agent=true` (API query param, or `use_multi_agent=True` to `MeetingPipeline.run`) switches to a three-stage pipeline instead (`backend/app/agents.py`):
+
+1. **ExtractorAgent** — LLM call that pulls candidate action items/decisions out of the transcript, each with a verbatim supporting quote.
+2. **VerifierAgent** — deterministic, no LLM call: checks each quote actually appears in the transcript and that the claim's wording is grounded in it (stemmed content-word overlap). Rejects fabricated or paraphrased-beyond-recognition claims.
+3. **WriterAgent** — formats only the verified claims into the final document, and appends anything rejected under an "UNVERIFIED — needs human review" section instead of silently dropping or silently shipping it.
+
+The result includes a `claims` list with per-claim verification status and a `verification_rate`. `tests/run_benchmark.py --multi-agent` runs the benchmark in this mode so the verification rate and grounding score can be compared against single-shot generation.
+
 ## 🛠 Tech Stack
 
 - **Frontend**: Next.js, React, Tailwind CSS (Server-Sent Events for real-time progress streaming)

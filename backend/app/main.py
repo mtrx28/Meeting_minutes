@@ -152,9 +152,14 @@ async def upload_audio(file: UploadFile = File(...)):
 
 
 @app.get("/api/process/{job_id}")
-async def process_audio(job_id: str):
+async def process_audio(job_id: str, use_multi_agent: bool = False):
     """
     Process an uploaded audio file. Streams progress via SSE.
+
+    use_multi_agent: if true, generate minutes via the Extract->Verify->Write
+    pipeline instead of a single one-shot LLM call -- slower, but flags
+    action items/decisions that aren't grounded in the transcript instead of
+    silently shipping them.
     """
     if job_id not in jobs:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -187,6 +192,7 @@ async def process_audio(job_id: str):
                 audio_path=job['file_path'],
                 work_dir=work_dir,
                 progress_callback=progress_callback,
+                use_multi_agent=use_multi_agent,
             )
 
             job['result'] = result

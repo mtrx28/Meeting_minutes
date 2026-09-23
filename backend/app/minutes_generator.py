@@ -223,7 +223,11 @@ Format in clean markdown with bullet points."""
         logger.info("Generating detailed minutes...")
         minutes = self.generate_minutes(structured_input)
 
-        # Compute speaker statistics
+        return self._build_result(segments, summary, minutes)
+
+    def _build_result(self, segments: list[MeetingSegment], summary: str, minutes: str) -> dict:
+        """Assemble the final result dict (speaker stats + segments) shared by
+        both single-shot generation and the multi-agent pipeline."""
         speaker_stats = {}
         total_words = 0
         for seg in segments:

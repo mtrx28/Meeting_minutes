@@ -18,6 +18,9 @@ import re
 from dataclasses import dataclass, field
 
 from rouge_score import rouge_scorer
+from nltk.stem.porter import PorterStemmer
+
+_stemmer = PorterStemmer()
 
 _STOPWORDS = {
     'the', 'a', 'an', 'and', 'or', 'but', 'to', 'of', 'in', 'on', 'for',
@@ -74,8 +77,12 @@ def _extract_claim_bullets(minutes_markdown: str) -> list[str]:
 
 
 def _content_words(text: str) -> set[str]:
+    """Stemmed content words, so 'follows'/'follow' or 'launched'/'launch'
+    count as the same word — without stemming, the grounding check rejects
+    claims that are paraphrased with a different inflection of a word that
+    genuinely appears in the transcript."""
     words = re.findall(r"[a-z0-9']+", text.lower())
-    return {w for w in words if w not in _STOPWORDS and len(w) > 2}
+    return {_stemmer.stem(w) for w in words if w not in _STOPWORDS and len(w) > 2}
 
 
 @dataclass

@@ -68,12 +68,17 @@ def _concat_audio(meeting_dir: str, meeting_id: str) -> str:
     return out_path
 
 
-def run_meeting(pipeline: MeetingPipeline, meeting_id: str) -> dict:
+def run_meeting(pipeline: MeetingPipeline, meeting_id: str, use_multi_agent: bool = False) -> dict:
     meeting_dir = os.path.join(WAVS_DIR, meeting_id)
     audio_path = _concat_audio(meeting_dir, meeting_id)
 
-    print(f"[{meeting_id}] running pipeline on {os.path.basename(audio_path)}...")
-    result = pipeline.run(audio_path, work_dir=os.path.join(OUTPUT_DIR, f"{meeting_id}_chunks"))
+    mode = "multi-agent" if use_multi_agent else "single-shot"
+    print(f"[{meeting_id}] running pipeline ({mode}) on {os.path.basename(audio_path)}...")
+    result = pipeline.run(
+        audio_path,
+        work_dir=os.path.join(OUTPUT_DIR, f"{meeting_id}_chunks"),
+        use_multi_agent=use_multi_agent,
+    )
 
     minutes_path = os.path.join(OUTPUT_DIR, f"{meeting_id}_minutes.md")
     with open(minutes_path, "w", encoding="utf-8") as f:
@@ -96,11 +101,13 @@ def run_meeting(pipeline: MeetingPipeline, meeting_id: str) -> dict:
 
     return {
         "meeting_id": meeting_id,
+        "mode": mode,
         "rouge1_f1": rouge["rouge1"]["f1"],
         "rouge2_f1": rouge["rouge2"]["f1"],
         "rougeL_f1": rouge["rougeL"]["f1"],
         "grounding_score": grounding.score,
         "unsupported_claims": grounding.unsupported,
+        "agent_verification_rate": result.get("verification_rate"),
         "num_speakers": result["num_speakers"],
         "processing_time_seconds": result["metadata"]["processing_time_seconds"],
     }
@@ -127,6 +134,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("meetings", nargs="*", help="Specific meeting IDs (e.g. ES2002). Default: all available.")
     parser.add_argument("--update-baseline", action="store_true", help="Write results as the new baseline instead of gating against it.")
+    parser.add_argument("--multi-agent", action="store_true",
+                         help="Generate minutes via the Extract->Verify->Write pipeline instead of single-shot generation.")
     args = parser.parse_args()
 
     load_dotenv(dotenv_path=os.path.join(BACKEND_DIR, ".env"))
@@ -151,7 +160,7 @@ def main():
     results = []
     for meeting_id in meeting_ids:
         try:
-            results.append(run_meeting(pipeline, meeting_id))
+            results.append(run_meeting(pipeline, meeting_id, use_multi_agent=args.multi_agent))
         except Exception as e:
             print(f"[{meeting_id}] FAILED: {e}", file=sys.stderr)
 

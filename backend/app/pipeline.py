@@ -14,6 +14,7 @@ from typing import Callable, Optional
 
 from .diarization import process_audio_pipeline
 from .minutes_generator import MeetingMinutesGenerator
+from .agents import MultiAgentMinutesPipeline
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,8 @@ class MeetingPipeline:
 
     def run(self, audio_path: str, work_dir: str = "audio_chunks",
             chunk_minutes: int = 15,
-            progress_callback: Optional[Callable] = None) -> dict:
+            progress_callback: Optional[Callable] = None,
+            use_multi_agent: bool = False) -> dict:
         """
         Run the complete pipeline on an audio file.
 
@@ -76,6 +78,11 @@ class MeetingPipeline:
             work_dir: Temporary directory for audio chunks.
             chunk_minutes: Duration of each audio chunk in minutes.
             progress_callback: Optional callback(stage, message) for progress updates.
+            use_multi_agent: If True, generate minutes via the Extract->Verify->Write
+                pipeline (app.agents.MultiAgentMinutesPipeline) instead of a single
+                one-shot LLM call. Slower (extra LLM call) but rejects/flags action
+                items and decisions that aren't grounded in the transcript, and the
+                result includes a 'claims' list with per-claim verification status.
 
         Returns:
             dict with: summary, minutes, speaker_stats, segments, metadata
@@ -115,7 +122,11 @@ class MeetingPipeline:
         if progress_callback:
             progress_callback("generating_minutes", "Generating meeting minutes with AI...")
 
-        result = self._minutes_generator.process_transcript(transcript_data)
+        if use_multi_agent:
+            multi_agent_pipeline = MultiAgentMinutesPipeline(self._minutes_generator)
+            result = multi_agent_pipeline.process_transcript(transcript_data)
+        else:
+            result = self._minutes_generator.process_transcript(transcript_data)
 
         # Add metadata
         end_time = datetime.now()

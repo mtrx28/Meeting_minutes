@@ -38,6 +38,17 @@ class TranscriptSegment(BaseModel):
     overlap: bool = False
 
 
+class Claim(BaseModel):
+    """A single extracted action item/decision and its verification status
+    (only present when the multi-agent pipeline was used)."""
+    claim_type: str
+    text: str
+    owner: Optional[str] = None
+    due_date: Optional[str] = None
+    verified: bool
+    rejection_reason: Optional[str] = None
+
+
 class MeetingMinutesResult(BaseModel):
     """Complete meeting minutes result."""
     job_id: str
@@ -49,4 +60,6 @@ class MeetingMinutesResult(BaseModel):
     total_duration: float
     num_speakers: int
     segments: List[TranscriptSegment]
+    claims: Optional[List[Claim]] = None
+    verification_rate: Optional[float] = None
 
