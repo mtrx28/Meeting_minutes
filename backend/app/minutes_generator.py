@@ -29,12 +29,12 @@ class MeetingMinutesGenerator:
     """Generates meeting minutes from structured transcript using Mistral API."""
 
     MAX_RETRIES = 5
-    RETRYABLE_ERRORS = ('429', '502', '503', '504', 'rate limit', 'server error', 'timeout')
+    RETRYABLE_ERRORS = ('429', '502', '503', '504', 'rate limit', 'server error', 'timeout', 'timed out')
 
-    def __init__(self, api_key: str, model: str = "mistral-large-latest"):
+    def __init__(self, api_key: str, model: str = "mistral-large-latest", timeout_ms: Optional[int] = 300000):
         if not api_key:
             raise ValueError("Mistral API key is required")
-        self.client = Mistral(api_key=api_key)
+        self.client = Mistral(api_key=api_key, timeout_ms=timeout_ms)
         self.model = model
 
     def _api_call_with_retry(self, messages: list[dict], max_tokens: int = 4000,
@@ -43,7 +43,9 @@ class MeetingMinutesGenerator:
         Make an API call with exponential backoff retry for transient errors.
         """
         last_error = None
+        actual_attempts = 0
         for attempt in range(self.MAX_RETRIES):
+            actual_attempts += 1
             try:
                 response = self.client.chat.complete(
                     model=self.model,
@@ -64,7 +66,7 @@ class MeetingMinutesGenerator:
                 else:
                     break
 
-        raise RuntimeError(f"API call failed after {self.MAX_RETRIES} attempts: {last_error}")
+        raise RuntimeError(f"API call failed after {actual_attempts} attempts: {last_error}")
 
     def load_segments(self, transcript_data: dict) -> list[MeetingSegment]:
         """Load transcript segments from JSON data (dict, not file path)."""

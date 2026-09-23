@@ -33,6 +33,8 @@ backend/outputs/
 backend/uploads
 # Datasets and generated evaluation files
 es2002/
+wavs/
+references/
 final_minutes.txt
 tests/final_minutes.txt
 *.pdf

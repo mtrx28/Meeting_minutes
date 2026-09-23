@@ -7,3 +7,4 @@ torch
 openai-whisper
 mistralai
 python-dotenv
+rouge-score
