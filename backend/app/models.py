@@ -49,6 +49,29 @@ class Claim(BaseModel):
     rejection_reason: Optional[str] = None
 
 
+class AskRequest(BaseModel):
+    """A cross-meeting question for the RAG knowledge base."""
+    question: str
+    meeting_id: Optional[str] = None  # restrict retrieval to one meeting
+    top_k: int = 5
+
+
+class Source(BaseModel):
+    """A cited transcript excerpt backing an /api/ask answer."""
+    citation: str
+    meeting_id: str
+    start: float
+    end: float
+    score: float
+
+
+class AskResponse(BaseModel):
+    """Answer from the RAG knowledge base, or a refusal if nothing was retrieved."""
+    answer: str
+    grounded: bool
+    sources: List[Source]
+
+
 class MeetingMinutesResult(BaseModel):
     """Complete meeting minutes result."""
     job_id: str

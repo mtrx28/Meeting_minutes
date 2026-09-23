@@ -35,6 +35,18 @@ By default step 5 is a single LLM call. Passing `use_multi_agent=true` (API quer
 
 The result includes a `claims` list with per-claim verification status and a `verification_rate`. `tests/run_benchmark.py --multi-agent` runs the benchmark in this mode so the verification rate and grounding score can be compared against single-shot generation.
 
+### Cross-meeting RAG knowledge base
+
+Every meeting the pipeline processes is automatically chunked (`backend/app/retrieval.py`) and appended to a persisted, cross-meeting index (`backend/app/knowledge_base.py`, stored at `backend/outputs/knowledge_base.jsonl`). `POST /api/ask` answers natural-language questions against it:
+
+```bash
+curl -X POST http://localhost:8000/api/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "What did we decide about the remote'\''s case material?", "top_k": 5}'
+```
+
+Retrieval is TF-IDF + cosine similarity over transcript chunks (a classic sparse retriever, not an embedding model) — deliberate, so the RAG layer adds zero model-download/network dependency and zero GPU requirement on top of a pipeline that already runs Whisper + pyannote locally. The answer is generated **only** from the retrieved excerpts, each cited as `{meeting_id} [mm:ss] {speaker}`; if nothing relevant is indexed for the question, the endpoint returns `"grounded": false` and a fixed refusal message instead of letting the LLM guess. Pass `meeting_id` in the request to scope retrieval to a single meeting.
+
 ## 🛠 Tech Stack
 
 - **Frontend**: Next.js, React, Tailwind CSS (Server-Sent Events for real-time progress streaming)

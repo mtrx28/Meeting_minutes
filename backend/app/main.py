@@ -18,8 +18,9 @@ from dotenv import load_dotenv
 
 from typing import Dict, Optional
 
-from .models import UploadResponse, MeetingMinutesResult
+from .models import UploadResponse, MeetingMinutesResult, AskRequest, AskResponse
 from .pipeline import MeetingPipeline
+from .minutes_generator import MeetingMinutesGenerator
 
 # Load environment variables
 load_dotenv()
@@ -268,6 +269,27 @@ async def get_results(job_id: str):
         'filename': job['filename'],
         **result,
     }
+
+
+@app.post("/api/ask", response_model=AskResponse)
+async def ask_question(request: AskRequest):
+    """
+    Retrieval-augmented Q&A across every meeting processed so far (or one
+    meeting, via meeting_id). Answers are generated only from retrieved
+    transcript excerpts and cited; if nothing relevant is indexed yet, the
+    response says so instead of letting the LLM guess.
+    """
+    pipeline = get_pipeline()
+    if pipeline._minutes_generator is None:
+        pipeline._minutes_generator = MeetingMinutesGenerator(api_key=MISTRAL_KEY)
+
+    result = pipeline.knowledge_base.answer(
+        question=request.question,
+        api_call=pipeline._minutes_generator._api_call_with_retry,
+        top_k=request.top_k,
+        meeting_id=request.meeting_id,
+    )
+    return AskResponse(**result)
 
 
 @app.delete("/api/jobs/{job_id}")

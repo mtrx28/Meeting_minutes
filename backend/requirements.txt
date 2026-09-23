@@ -9,3 +9,4 @@ mistralai
 python-dotenv
 rouge-score
 nltk
+scikit-learn
