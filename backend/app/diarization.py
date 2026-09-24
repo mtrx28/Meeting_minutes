@@ -7,11 +7,54 @@ from pydub import AudioSegment
 from pyannote.audio import Pipeline
 import torch
 import os
+import wave
+import numpy as np
 import whisper
 from bisect import bisect_left, bisect_right
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _load_waveform(wav_path: str) -> dict:
+    """
+    Read a PCM WAV file into the {'waveform', 'sample_rate'} dict pyannote's
+    Audio.__call__ accepts directly, bypassing torchaudio/torchcodec's file
+    decoding path entirely.
+
+    pyannote.audio (and torchaudio, as of the versions this project pins)
+    decode audio files via torchcodec, which loads native shared libraries
+    matched to a specific installed FFmpeg version. On a machine without a
+    matching FFmpeg "full-shared" build on PATH -- common on Windows dev
+    setups -- that load fails and pyannote.audio raises `NameError: name
+    'AudioDecoder' is not defined` for every single file, which the caller
+    here previously only logged and silently treated as "no speakers found".
+    Since every file this function receives was just exported by pydub as
+    plain PCM WAV (see split_audio_into_chunks), the stdlib `wave` module
+    reads it with zero native/codec dependencies, sidestepping the problem
+    rather than requiring a specific FFmpeg install to be fixed.
+    """
+    with wave.open(wav_path, "rb") as f:
+        n_channels = f.getnchannels()
+        sample_width = f.getsampwidth()
+        sample_rate = f.getframerate()
+        raw = f.readframes(f.getnframes())
+
+    dtype_and_max = {1: (np.uint8, 255, 128), 2: (np.int16, 32768, 0), 4: (np.int32, 2147483648, 0)}
+    if sample_width not in dtype_and_max:
+        raise ValueError(f"Unsupported WAV sample width: {sample_width} bytes ({wav_path})")
+    dtype, max_val, zero_offset = dtype_and_max[sample_width]
+
+    samples = np.frombuffer(raw, dtype=dtype).astype(np.float32)
+    samples = (samples - zero_offset) / max_val
+
+    if n_channels > 1:
+        samples = samples.reshape(-1, n_channels).T
+    else:
+        samples = samples.reshape(1, -1)
+
+    waveform = torch.from_numpy(samples.copy())
+    return {"waveform": waveform, "sample_rate": sample_rate}
 
 
 def split_audio_into_chunks(input_file: str, output_dir: str = "audio_chunks",
@@ -57,14 +100,19 @@ def perform_speaker_diarization(audio_file: str, pipeline: Pipeline,
     logger.info(f"Analyzing speakers in: {os.path.basename(audio_file)}")
 
     try:
-        diarization = pipeline(audio_file)
+        diarization = pipeline(_load_waveform(audio_file))
     except Exception as e:
         logger.error(f"Diarization failed for {audio_file}: {e}")
         return []
 
+    # pyannote.audio 4.x wraps the result in a DiarizeOutput dataclass
+    # (.speaker_diarization holds the Annotation); older versions return the
+    # Annotation directly. Support both rather than pinning to one version.
+    annotation = getattr(diarization, "speaker_diarization", diarization)
+
     # Collect raw segments with global offset applied
     raw_segments = []
-    for turn, _, speaker in diarization.itertracks(yield_label=True):
+    for turn, _, speaker in annotation.itertracks(yield_label=True):
         raw_segments.append({
             'speaker': speaker,
             'start': turn.start + offset_seconds,

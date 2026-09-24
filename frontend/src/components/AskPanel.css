@@ -1,0 +1,202 @@
+/* ============================================
+   ASK PANEL (RAG Q&A) STYLES
+   ============================================ */
+
+.ask-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 720px;
+  padding-top: var(--space-6);
+}
+
+.ask-panel__header h2 {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.ask-panel__subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.ask-panel__scope {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ask-panel__scope label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.ask-panel__scope input {
+  flex: 1;
+  max-width: 200px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.ask-panel__scope input:focus {
+  outline: none;
+  border-color: var(--border-accent);
+}
+
+.ask-panel__messages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 320px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+
+.ask-panel__empty {
+  margin: auto;
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.ask-message {
+  display: flex;
+}
+
+.ask-message--user {
+  justify-content: flex-end;
+}
+
+.ask-message--assistant {
+  justify-content: flex-start;
+}
+
+.ask-bubble {
+  max-width: 85%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.ask-bubble--user {
+  background: var(--accent-gradient);
+  color: white;
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+.ask-bubble--assistant {
+  background: var(--bg-glass-strong);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
+.ask-bubble--refused {
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+.ask-bubble__badge {
+  margin-bottom: var(--space-2);
+}
+
+.ask-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.ask-source-chip {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--text-accent);
+}
+
+.ask-bubble--loading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-4);
+}
+
+.ask-typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  animation: ask-typing 1.2s infinite ease-in-out;
+}
+
+.ask-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.ask-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes ask-typing {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+.ask-panel__input-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.ask-panel__input-row textarea {
+  flex: 1;
+  resize: none;
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.ask-panel__input-row textarea:focus {
+  outline: none;
+  border-color: var(--border-accent);
+}
+
+.ask-panel__input-row .btn-process {
+  width: auto;
+  max-width: none;
+  padding: var(--space-3) var(--space-6);
+}
+
+.ask-panel__input-row .btn-process:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .ask-panel__scope {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ask-panel__scope input {
+    max-width: none;
+    width: 100%;
+  }
+}

@@ -150,6 +150,7 @@ function renderMarkdown(text) {
 export default function MeetingMinutes({ data, onReset }) {
   const [activeTab, setActiveTab] = useState("minutes");
   const [transcriptExpanded, setTranscriptExpanded] = useState(false);
+  const hasClaims = Array.isArray(data.claims) && data.claims.length > 0;
 
   const speakerList = useMemo(() => {
     return Object.keys(data.speaker_stats || {}).sort();
@@ -220,6 +221,7 @@ export default function MeetingMinutes({ data, onReset }) {
         {[
           { key: "minutes", label: "Meeting Minutes" },
           { key: "summary", label: "Executive Summary" },
+          ...(hasClaims ? [{ key: "claims", label: `Claims (${data.claims.length})` }] : []),
           { key: "speakers", label: "Speakers" },
           { key: "transcript", label: "Transcript" },
         ].map((tab) => (
@@ -249,6 +251,54 @@ export default function MeetingMinutes({ data, onReset }) {
               <div className="summary-badge badge badge-accent">Executive Summary</div>
             </div>
             {renderMarkdown(data.summary)}
+          </div>
+        )}
+
+        {/* --- Claims tab (multi-agent only) --- */}
+        {activeTab === "claims" && hasClaims && (
+          <div className="claims-content">
+            <div className="claims-summary">
+              <span className="badge badge-success">
+                {data.claims.filter((c) => c.verified).length} verified
+              </span>
+              <span className="badge badge-warning">
+                {data.claims.filter((c) => !c.verified).length} unverified
+              </span>
+              {typeof data.verification_rate === "number" && (
+                <span className="claims-rate">
+                  {(data.verification_rate * 100).toFixed(0)}% verification rate
+                </span>
+              )}
+            </div>
+            <p className="claims-explainer">
+              Every action item and decision the model extracted was checked against the transcript
+              before being included in the minutes above. Unverified claims are excluded from the
+              document and listed here for review instead of being silently dropped or shipped.
+            </p>
+            <div className="claims-list">
+              {data.claims.map((claim, i) => (
+                <div key={i} className={`claim-card ${claim.verified ? "claim-card--verified" : "claim-card--unverified"}`}>
+                  <div className="claim-card__top">
+                    <span className={`badge ${claim.claim_type === "decision" ? "badge-accent" : "badge-success"}`}>
+                      {claim.claim_type === "decision" ? "decision" : "action item"}
+                    </span>
+                    <span className={`badge ${claim.verified ? "badge-success" : "badge-warning"}`}>
+                      {claim.verified ? "verified" : "unverified"}
+                    </span>
+                  </div>
+                  <p className="claim-card__text">{claim.text}</p>
+                  {(claim.owner || claim.due_date) && (
+                    <div className="claim-card__meta">
+                      {claim.owner && <span>Owner: {claim.owner}</span>}
+                      {claim.due_date && <span>Due: {claim.due_date}</span>}
+                    </div>
+                  )}
+                  {!claim.verified && claim.rejection_reason && (
+                    <p className="claim-card__reason">Rejected: {claim.rejection_reason}</p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

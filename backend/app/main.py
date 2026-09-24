@@ -45,6 +45,11 @@ CHUNKS_DIR.mkdir(exist_ok=True)
 HF_TOKEN = os.getenv("HF_API_TOKEN", "")
 MISTRAL_KEY = os.getenv("MISTRAL_API_KEY", "")
 WHISPER_MODEL = os.getenv("WHISPER_MODEL_SIZE", "base")
+# Not every Mistral account tier has access to mistral-large-latest (the
+# previous hardcoded default) -- e.g. a 403 "tier_not_allowed" error.
+# Configurable via env so a deployment can point at whatever model its key
+# actually has access to, without a code change.
+MISTRAL_MODEL = os.getenv("MISTRAL_MODEL", "mistral-large-latest")
 
 ALLOWED_EXTENSIONS = {'.wav', '.mp3', '.m4a', '.flac', '.ogg', '.webm', '.mp4', '.wma', '.aac'}
 MAX_FILE_SIZE_MB = 500
@@ -68,6 +73,7 @@ def get_pipeline() -> MeetingPipeline:
             hf_token=HF_TOKEN,
             mistral_api_key=MISTRAL_KEY,
             whisper_model_size=WHISPER_MODEL,
+            mistral_model=MISTRAL_MODEL,
         )
     return _pipeline_instance
 
@@ -281,7 +287,7 @@ async def ask_question(request: AskRequest):
     """
     pipeline = get_pipeline()
     if pipeline._minutes_generator is None:
-        pipeline._minutes_generator = MeetingMinutesGenerator(api_key=MISTRAL_KEY)
+        pipeline._minutes_generator = MeetingMinutesGenerator(api_key=MISTRAL_KEY, model=MISTRAL_MODEL)
 
     result = pipeline.knowledge_base.answer(
         question=request.question,

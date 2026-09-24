@@ -4,6 +4,7 @@ python-multipart
 pydub
 pyannote.audio
 torch
+numpy
 openai-whisper
 mistralai
 python-dotenv

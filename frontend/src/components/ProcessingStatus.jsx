@@ -21,6 +21,7 @@ export default function ProcessingStatus({
   filename,
   apiBase,
   isUploading,
+  useMultiAgent,
   onComplete,
   onError,
 }) {
@@ -53,7 +54,8 @@ export default function ProcessingStatus({
   useEffect(() => {
     if (!jobId || isUploading) return;
 
-    const es = new EventSource(`${apiBase}/api/process/${jobId}`);
+    const url = `${apiBase}/api/process/${jobId}${useMultiAgent ? "?use_multi_agent=true" : ""}`;
+    const es = new EventSource(url);
     eventSourceRef.current = es;
 
     es.onmessage = (event) => {
@@ -93,7 +95,7 @@ export default function ProcessingStatus({
     return () => {
       es.close();
     };
-  }, [jobId, isUploading, apiBase, onComplete, onError]);
+  }, [jobId, isUploading, apiBase, useMultiAgent, onComplete, onError]);
 
   const currentStageIndex = getStageIndex(currentStage);
 

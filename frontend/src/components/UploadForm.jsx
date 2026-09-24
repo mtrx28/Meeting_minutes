@@ -48,6 +48,7 @@ export default function UploadForm({ onUpload, error }) {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileDuration, setFileDuration] = useState(null);
+  const [useMultiAgent, setUseMultiAgent] = useState(false);
   const fileInputRef = useRef(null);
 
   const validateAndSetFile = useCallback(async (file) => {
@@ -87,9 +88,9 @@ export default function UploadForm({ onUpload, error }) {
 
   const handleSubmit = useCallback(() => {
     if (selectedFile) {
-      onUpload(selectedFile);
+      onUpload(selectedFile, useMultiAgent);
     }
-  }, [selectedFile, onUpload]);
+  }, [selectedFile, useMultiAgent, onUpload]);
 
   const handleRemoveFile = useCallback(() => {
     setSelectedFile(null);
@@ -200,6 +201,28 @@ export default function UploadForm({ onUpload, error }) {
           </div>
         )}
       </div>
+
+      {/* Multi-agent toggle */}
+      {selectedFile && (
+        <label className="multi-agent-toggle animate-fade-in" htmlFor="use-multi-agent">
+          <input
+            type="checkbox"
+            id="use-multi-agent"
+            checked={useMultiAgent}
+            onChange={(e) => setUseMultiAgent(e.target.checked)}
+          />
+          <span className="multi-agent-toggle__switch" />
+          <span className="multi-agent-toggle__text">
+            <span className="multi-agent-toggle__title">
+              Verified generation
+              <span className="badge badge-accent" style={{ marginLeft: 8 }}>multi-agent</span>
+            </span>
+            <span className="multi-agent-toggle__hint">
+              Extract → Verify → Write: flags action items/decisions that aren&apos;t grounded in the transcript instead of silently including them. Slower (one extra LLM pass).
+            </span>
+          </span>
+        </label>
+      )}
 
       {/* Submit button */}
       {selectedFile && (

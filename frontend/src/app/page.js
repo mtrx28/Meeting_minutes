@@ -4,21 +4,28 @@ import { useState, useCallback } from "react";
 import UploadForm from "../components/UploadForm";
 import ProcessingStatus from "../components/ProcessingStatus";
 import MeetingMinutes from "../components/MeetingMinutes";
+import AskPanel from "../components/AskPanel";
+import KnowledgeGraphPanel from "../components/KnowledgeGraphPanel";
 import "./page.css";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function HomePage() {
+  // Top-level view: meetings | ask | graph
+  const [view, setView] = useState("meetings");
+
   // App states: idle | uploading | processing | complete | error
   const [appState, setAppState] = useState("idle");
   const [jobId, setJobId] = useState(null);
   const [filename, setFilename] = useState("");
+  const [useMultiAgent, setUseMultiAgent] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  const handleUpload = useCallback(async (file) => {
+  const handleUpload = useCallback(async (file, multiAgent) => {
     setAppState("uploading");
     setError(null);
+    setUseMultiAgent(!!multiAgent);
 
     try {
       const formData = new FormData();
@@ -71,7 +78,14 @@ export default function HomePage() {
     setFilename("");
     setResult(null);
     setError(null);
+    setView("meetings");
   }, []);
+
+  const NAV_ITEMS = [
+    { key: "meetings", label: "Meetings" },
+    { key: "ask", label: "Ask" },
+    { key: "graph", label: "Knowledge Graph" },
+  ];
 
   return (
     <div className="app-container">
@@ -95,7 +109,19 @@ export default function HomePage() {
             </div>
           </div>
 
-          {appState === "complete" && (
+          <nav className="header-nav">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.key}
+                className={`header-nav__btn ${view === item.key ? "header-nav__btn--active" : ""}`}
+                onClick={() => setView(item.key)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          {view === "meetings" && appState === "complete" && (
             <button className="btn-new-meeting" onClick={handleReset}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="12" y1="5" x2="12" y2="19" />
@@ -109,30 +135,35 @@ export default function HomePage() {
 
       {/* Main content */}
       <main className="app-main">
-        {(appState === "idle" || appState === "error") && (
+        {view === "meetings" && (appState === "idle" || appState === "error") && (
           <div className="animate-fade-in-up">
             <UploadForm onUpload={handleUpload} error={error} />
           </div>
         )}
 
-        {(appState === "uploading" || appState === "processing") && (
+        {view === "meetings" && (appState === "uploading" || appState === "processing") && (
           <div className="animate-fade-in-up">
             <ProcessingStatus
               jobId={jobId}
               filename={filename}
               apiBase={API_BASE}
               isUploading={appState === "uploading"}
+              useMultiAgent={useMultiAgent}
               onComplete={handleProcessingComplete}
               onError={handleProcessingError}
             />
           </div>
         )}
 
-        {appState === "complete" && result && (
+        {view === "meetings" && appState === "complete" && result && (
           <div className="animate-fade-in-up">
             <MeetingMinutes data={result} onReset={handleReset} />
           </div>
         )}
+
+        {view === "ask" && <AskPanel apiBase={API_BASE} />}
+
+        {view === "graph" && <KnowledgeGraphPanel apiBase={API_BASE} />}
       </main>
 
       {/* Footer */}

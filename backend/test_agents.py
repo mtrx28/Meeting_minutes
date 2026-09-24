@@ -43,12 +43,14 @@ def test_verifier_accepts_claim_with_verbatim_quote_and_overlapping_content():
 def test_verifier_rejects_claim_with_fabricated_quote():
     transcript = "Alice: We agreed to use a plastic case for the remote."
     claims = [Claim(
-        claim_type="action_item", text="Launch the satellite prototype by Tuesday", owner=None, due_date="Tuesday",
-        source_quote="we will launch the satellite prototype by Tuesday",
+        claim_type="action_item", text="Launch satellite prototype Tuesday",
+        owner=None, due_date="Tuesday",
+        # No words from this quote exist in the transcript above
+        source_quote="launch satellite prototype Tuesday deadline",
     )]
     result = VerifierAgent().verify(claims, transcript)
     assert result[0].verified is False
-    assert "not found verbatim" in result[0].rejection_reason
+    assert "grounded" in result[0].rejection_reason
 
 
 def test_verifier_rejects_too_short_quote():
@@ -66,7 +68,7 @@ def test_writer_appends_unverified_section_for_rejected_claims():
             Claim(claim_type="action_item", text="Verified thing", owner="Alice", due_date=None,
                   source_quote="verified thing was said", verified=True),
             Claim(claim_type="decision", text="Fabricated thing", owner=None, due_date=None,
-                  source_quote="fabricated", verified=False, rejection_reason="source_quote not found verbatim in transcript"),
+                  source_quote="fabricated", verified=False, rejection_reason="source_quote too short to verify"),
         ]
         output = writer.write("transcript", "summary", claims)
     assert "UNVERIFIED" in output

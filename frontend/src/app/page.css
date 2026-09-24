@@ -70,6 +70,39 @@
   display: none; /* Hide tagline for a cleaner FKM-like wordmark */
 }
 
+/* --- Header nav --- */
+.header-nav {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+}
+
+.header-nav__btn {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+}
+
+.header-nav__btn:hover {
+  color: var(--text-primary);
+}
+
+.header-nav__btn--active {
+  background: var(--accent-gradient);
+  color: white;
+}
+
 .btn-new-meeting {
   display: inline-flex;
   align-items: center;
@@ -121,6 +154,15 @@
 @media (max-width: 768px) {
   .header-content {
     padding: var(--space-3) var(--space-4);
+    flex-wrap: wrap;
+    height: auto;
+    gap: var(--space-3);
+  }
+
+  .header-nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
   }
 
   .app-main {

@@ -111,11 +111,11 @@ The source_quote must be copied exactly from the transcript, not paraphrased."""
 class VerifierAgent:
     """Deterministically checks each claim's quote and content against the source transcript."""
 
-    QUOTE_MIN_LEN = 6  # a too-short quote is nearly free to "support" by chance
-    CONTENT_OVERLAP_THRESHOLD = 0.4
+    QUOTE_MIN_LEN = 6       # a too-short quote is nearly free to "support" by chance
+    QUOTE_OVERLAP_THRESHOLD = 0.55  # fraction of quote's content words that must appear in transcript
+    CONTENT_OVERLAP_THRESHOLD = 0.35  # fraction of claim's content words that must appear in transcript
 
     def verify(self, claims: list[Claim], source_transcript: str) -> list[Claim]:
-        normalized_transcript = self._normalize(source_transcript)
         transcript_words = _content_words(source_transcript)
 
         for claim in claims:
@@ -125,10 +125,18 @@ class VerifierAgent:
                 claim.rejection_reason = "source_quote too short to verify"
                 continue
 
-            if self._normalize(quote) not in normalized_transcript:
-                claim.verified = False
-                claim.rejection_reason = "source_quote not found verbatim in transcript"
-                continue
+            # LLMs reliably paraphrase even when asked for verbatim quotes, so a
+            # hard substring match rejects almost everything. Word-overlap on the
+            # quote's content words is a better grounding signal: if ≥55% of the
+            # meaningful words in the quote actually appear in the transcript, the
+            # quote is grounded even if the exact phrasing differs slightly.
+            quote_words = _content_words(quote)
+            if quote_words:
+                quote_overlap = len(quote_words & transcript_words) / len(quote_words)
+                if quote_overlap < self.QUOTE_OVERLAP_THRESHOLD:
+                    claim.verified = False
+                    claim.rejection_reason = f"source_quote words not sufficiently grounded in transcript ({quote_overlap:.2f} < {self.QUOTE_OVERLAP_THRESHOLD})"
+                    continue
 
             claim_words = _content_words(claim.text)
             if claim_words:
